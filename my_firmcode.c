@@ -121,3 +121,74 @@ char *convert(unsigned int num, int base)
 	
 	return(ptr); 
 }
+
+
+Implementing printf in c
+I'm trying to implement printf in c, I have a problem handling some of the conversion, like %S%D%O%U I get Invalid conversion specifier warning, when I use printf.I have to manage the following conversions: sSpdDioOuUxXcC and %p doesn't produce the right results.
+
+char *convert(unsigned int num, int base) 
+{ 
+    static char Representation[]= "0123456789ABCDEF";
+    static char buffer[50]; 
+    char *ptr; 
+
+    ptr = &buffer[49]; 
+   *ptr = '\0'; 
+
+    do 
+    { 
+        *--ptr = Representation[num%base]; 
+        num /= base; 
+    }while(num != 0); 
+    return(ptr); 
+}
+
+void    my_printf(char *format, ...)
+{
+    char            *traverse;
+    va_list         arg;
+
+    va_start(arg, format);
+    traverse = format;
+    while (*traverse)
+    {
+        if (*traverse == '%')
+        {
+            *traverse++;
+            if (*traverse == 'd' || *traverse == 'u' || *traverse == 'i' || *traverse == 'U')
+                putnbr(va_arg(arg, int));
+            else if (*traverse == 'c' || *traverse == '%' || *traverse == 'C')
+                putchar(va_arg(arg, int));
+            else if (*traverse == 's')
+                puts(va_arg(arg, char *));
+            else if (*traverse == 'o')
+                puts(convert(va_arg(arg, unsigned int), 8));
+            else if (*traverse == 'x')
+                puts(convert(va_arg(arg, unsigned int), 16));
+            else if (*traverse == 'X')
+                puts(convert(va_arg(arg, unsigned int), 16));
+            else if (*traverse == 'p')
+                puts(va_arg(arg, unsigned long));
+            *traverse++;
+        }
+        putchar(*traverse++);
+    }
+    va_end(arg);
+}
+Answers
+Alastair Brown May 2016 
+I think va_arg always returns whatever is passed to its second argument. Try changing
+
+char *convert(unsigned int num, int base)
+
+to
+
+char *convert(unsigned long num, int base)
+
+and changing your
+
+puts(convert(va_arg(arg, ...), ...));
+
+lines to
+
+puts((unsigned long)convert(va_arg(arg, ...), ...));
